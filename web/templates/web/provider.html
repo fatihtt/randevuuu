@@ -1,0 +1,125 @@
+{% extends "web/layout.html" %}
+{% load static %}
+
+{% block title %}
+    randevuuu - reservation
+{% endblock %}
+
+{% block head %}
+    <link href="{% static 'web/provider.css' %}" rel="stylesheet">
+    <script src="{% static 'web/provider.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="div-provider-main">
+        <div class="div-provider-detail">
+            {% if provider.logo_url %}
+                <img src="/static/{{ provider.logo_url }}" alt="{{ provider.name }}" class="img-logo">
+            {% else %}
+            <div class="div-provider-no-image">
+                <span>{{ provider.name }}</span>
+            </div>
+            {% endif %}
+            <div class="div-provider-details">
+                <div class="row">
+                    <div class="col">Provider:</div>
+                    <div class="col">{{ provider.name }}</div>
+                </div>
+                <div class="row">
+                    <div class="col">Location:</div>
+                    <div class="col">
+                        {{ provider.location }}
+                        <a href="https:maps.google.com/?q={{ provider.longitude }},{{ provider.latitude }}" target="_blank">
+                            <span class="material-icons pointer link-to-map icon-link no-a">place</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">Subscribers:</div>
+                    <div class="col">{{ provider.subscribers }}</div>
+                </div>
+                <div class="row">
+                    <div class="col">Total Reservations:</div>
+                    <div class="col">{{ provider.total_reservations }}</div>
+                </div>
+                <div class="row">
+                    <div class="col">Realized Reservations:</div>
+                    <div class="col">{{ provider.realized_reservations }}</div>
+                </div>
+                <div class="row">
+                    <div class="col">Rating:</div>
+                    <div class="col">
+                        {% if not provider.star_avg == -1 %}
+                            {{ star_avg }}
+                        {% else %}
+                            No enough assessment yet.
+                        {% endif %}
+                    </div>
+                </div>
+                {% if provider.your_reserv_count > 0 %}
+                    <div class="row{% if provider.your_unrated_reservations %} row-multiline{% endif %}">
+                        <div class="col{% if provider.your_unrated_reservations %} col-top{% endif %}">Your history:</div>
+                        <div class="col">
+                            <div class="div-reservation-rating">
+                                <div>
+                                    You have {{ provider.your_reserv_realized_count }} of {{ provider.your_reserv_count }} realized 
+                                    reservations.
+                                </div>
+                                {% if provider.your_unrated_reservations %}
+                                    <div class="div-reservation-rate-main">
+                                        Please rate your prior realized reservations:
+                                        {% for res in provider.your_unrated_reservations %}
+                                        <div class="div-reservation-rate">
+                                            <div class="div-rate-desc">
+                                                {{ res.service.service.name }},
+                                                {{ res.start_time }}
+                                            </div>
+                                            <div class="div-rate-stars pointer">
+                                                <span data-note="1" class="material-icons span-rating-icon">
+                                                    star_outline
+                                                </span>
+                                                <span data-note="2" class="material-icons span-rating-icon">
+                                                    star_outline
+                                                </span>
+                                                <span data-note="3" class="material-icons span-rating-icon">
+                                                    star_outline
+                                                </span>
+                                                <span data-note="4" class="material-icons span-rating-icon">
+                                                    star_outline
+                                                </span>
+                                                <span data-note="5" class="material-icons span-rating-icon">
+                                                    star_outline
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="row">
+                    {% if not provider.active_reservation == None %}
+                        <div class="col">Your active reservation:</div>
+                        <div class="col">
+                            {{ provider.active_reservation.service.service.name }}, {{ provider.active_reservation.start_time }}
+                        </div>
+                    {% else %}
+                        <div class="col"></div>
+                        <div class="col actions">
+                            <button class="button-out-1 button-color-green">
+                                New Reservation
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if message %}
+        <script>
+            gMessage("alert", "{{ message }}", "/");
+        </script>
+    {% endif %}
+{% endblock %}

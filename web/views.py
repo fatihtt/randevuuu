@@ -8,8 +8,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core import serializers
 from django.db.models import Q
 import json
+from datetime import datetime
 
-from .models import User, Reservation, Subscriptions, ServiceProvider, AvailableService
+from .models import User, Reservation, Subscriptions, ServiceProvider, AvailableService, Payment
 
 # Create your views here.
 def index(request):
@@ -132,3 +133,136 @@ def view_search(request):
     except Exception as e:
         print("error: ", e)
         return JsonResponse({"message": e}, status=500)
+    
+def view_reservation(request, reservation_id):
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect("login")
+    
+    try:
+        try:
+            reservation = Reservation.objects.get(id=reservation_id, user=request.user)
+        except:
+            raise Exception("No reservation found!")
+
+        # Adjust remaining text
+        remaining = reservation.start_time.replace(tzinfo=None) - datetime.now()
+        remaining_text = f"{remaining.days} days, {remaining.seconds//3600} hours and {(remaining.seconds//60)%60} minutes"
+
+        if reservation.start_time.replace(tzinfo=None) < datetime.now():
+            remaining_text = "Passed"
+
+        # Adjust location info
+        locat = reservation.service.provider.location
+        location_text = f"{locat.district}, {locat.city}"
+
+        # Adjust payment info
+        payment_done = False
+        payments = reservation.payments
+        print("payment count: ", payments.count())
+        if payments.count() > 0:
+            payment_done = True
+        reservation_cooked = {
+            "service_name": reservation.service.service.name,
+            "provider_id": reservation.service.provider.id,
+            "provider_name": reservation.service.provider.name,
+            "service_time": reservation.start_time,
+            "remaining": remaining_text,
+            "remaining_days": remaining.days,
+            "location": location_text,
+            "longitude": locat.longitude,
+            "latitude": locat.latitude,
+            "payment_done": payment_done,
+            "active": reservation.active
+        }
+        return render(request, "web/reservation.html", {
+            "res": reservation_cooked
+        })
+    except Exception as e:
+        return render(request, "web/reservation.html", {
+            "message": e
+        })
+
+def view_provider(request, provider_id):
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect("login")
+    
+    try:
+        try:
+            provider = ServiceProvider.objects.get(id=provider_id)
+        except:
+            raise Exception("No provider found!")
+        
+        # Adjust location info
+        locat = provider.location
+        location_text = f"{locat.district}, {locat.city}"
+
+        # Adjust total reservations, realized reservations, rating
+        available_services = provider.available_services
+        reserv_count = 0
+        realized_reservations = 0
+
+        # Rating elements
+        total_stars = 0
+        star_count = 0
+
+        # "Your history" elements
+        your_reserv_count = 0
+        your_reserv_realized_count = 0
+        your_unrated_reservations = []
+        
+        for available_service in available_services.all():
+            reserv_count = reserv_count + available_service.reservations.count()
+            realized_reservations = realized_reservations + available_service.reservations.filter(realization=True).count()
+            for reservation in available_service.reservations.all():
+                if reservation.user == request.user:
+                    your_reserv_count = your_reserv_count + 1
+                    if reservation.realization:
+                        your_reserv_realized_count = your_reserv_realized_count + 1
+                        if not reservation.customer_star:
+                            your_unrated_reservations.append(reservation)
+                # for rating 
+                if reservation.realization and reservation.customer_star:
+                    total_stars = total_stars + reservation.customer_star
+                    star_count = star_count + 1
+        
+        if star_count > 10:
+            star_avg = total_stars / star_count
+        else:
+            star_avg = -1
+
+        active_reservations = Reservation.objects.filter(user=request.user, service__provider=provider, active=True).exclude(realization=True)
+
+        # Adjust active reservation
+        if active_reservations.count() > 1:
+            raise Exception("You have more than one active reservation")
+        
+        active_reservation = None
+        
+        if active_reservations.count() == 1:
+            active_reservation = active_reservations[0]
+            
+
+        provider_cooked = {
+                "id": provider.id,
+                "name": provider.name,
+                "logo_url": provider.provider_settings.logo_url,
+                "location": location_text,
+                "longitude": locat.longitude,
+                "latitude": locat.latitude,
+                "total_reservations": reserv_count,
+                "realized_reservations": realized_reservations,
+                "subscribers": provider.subscriptions.count(),
+                "star_avg": star_avg,
+                "your_reserv_count": your_reserv_count,
+                "your_reserv_realized_count": your_reserv_realized_count,
+                "your_unrated_reservations": your_unrated_reservations,
+                "active_reservation": active_reservation
+            }
+        return render(request, "web/provider.html", {
+            "provider": provider_cooked
+        })
+    except Exception as e:
+        print("error", e)
+        return render(request, "web/provider.html", {
+            "message": e
+        })

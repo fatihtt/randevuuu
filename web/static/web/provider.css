@@ -1,0 +1,47 @@
+.div-provider-detail {
+    margin-top:30px;
+}
+.div-reservation-rating {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+.div-reservation-rate {
+    display: flex;
+    flex-direction: column;
+    margin-top:20px;
+}
+.div-rate-desc {
+    max-width: 300px;
+}
+.div-reservation-rate-main {
+    margin-top: 20px;
+    max-height: 300px;
+    overflow-y: scroll;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+.div-reservation-rate-main::-webkit-scrollbar {
+    display: none;
+}
+.div-reservation-rate > div {
+    flex: 1;
+}
+.div-reservation-rate:hover .div-rate-desc {
+    color: var(--m-green);
+}
+.div-rate-stars {
+    padding: 5px 5px;
+}
+.span-rating-icon {
+    color: var(--m-beige);
+    -webkit-text-stroke: 1px var(--m-font-color);
+    vertical-align: bottom;
+    font-size: 30px;
+}
+.col-top {
+    align-self: flex-start;
+}
+.row-multiline {
+    margin-top: 10px;
+}

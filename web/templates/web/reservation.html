@@ -1,0 +1,80 @@
+{% extends "web/layout.html" %}
+{% load static %}
+
+{% block title %}
+    randevuuu - reservation
+{% endblock %}
+
+{% block head %}
+    <link href="{% static 'web/reservation.css' %}" rel="stylesheet">
+    <script src="{% static 'web/reservation.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="div-reservation-main">
+        <h2 class="h2-page-header">
+            <span class="material-icons pointer icon-link link-home">home</span>
+            <span>|</span>
+            <span>Reservation Details:</span>
+        </h2>
+        <div class="div-reservation-detail">
+            <div class="row">
+                <div class="col">Service:</div>
+                <div class="col">{{ res.service_name }}</div>
+            </div>
+            <div class="row">
+                <div class="col">Provider:</div>
+                <div class="col">
+                    <div class="div-provider-main">
+                        <a href="/provider/{{ res.provider_id }}" class="a-reservation-detail">{{ res.provider_name }}</a>
+                        <span class="material-icons pointer icon-link icon-link-green">textsms</span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">Time:</div>
+                <div class="col">{{ res.service_time }}</div>
+            </div>
+            <div class="row">
+                <div class="col">Remaining:</div>
+                <div class="col">{{ res.remaining }}</div>
+            </div>
+            <div class="row">
+                <div class="col">Location:</div>
+                <div class="col">
+                    <div class="div-location-main">
+                        {{ res.location }}
+                        <span data-longitude="{{ res.longitude }}" data-latitude="{{ res.latitude }}" class="material-icons pointer link-to-map icon-link">place</span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">Payment:</div>
+                <div class="col">
+                    {% if res.payment_done %}
+                        <span class="material-icons m-green">done</span>
+                    {% elif res.active %}
+                        <button class="button-out-1 button-color-beige">Make Payment</button>
+                    {% else %}
+                        Reservation Canceled
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col"></div>
+                <div class="col actions">
+                    {% if not res.payment_done and res.remaining_days > 0 and res.active %}
+                        <button class="button-out-1 button-color-red">
+                            Cancel Reservation
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if message %}
+        <script>
+            gMessage("alert", "{{ message }}", "/");
+        </script>
+    {% endif %}
+{% endblock %}

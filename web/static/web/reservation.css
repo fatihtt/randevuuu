@@ -1,0 +1,29 @@
+.row {
+    display: flex;
+    flex-direction: row;
+    min-height: 50px;
+    align-items: center;
+    margin-right: auto;
+}
+.col:nth-child(1) {
+    max-width: 100px;
+}
+.col {
+    flex: 1;
+}
+.col.actions {
+    margin-top:15px;
+}
+.div-location-main, .div-provider-main {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+.h2-page-header {
+    display: flex;
+    align-items: center;
+    gap:30px;
+}
+.h2-page-header > .icon-link {
+    font-size: 35px;
+}

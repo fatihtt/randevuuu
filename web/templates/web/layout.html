@@ -23,6 +23,9 @@
                     <a href="{% url 'login' %}" class="a-header-menu">Login</a>
                     <a href="{% url 'sign-up' %}" class="a-header-menu">Sign Up</a>
                 {% else %}
+                    {% if not request.path == "/" %}
+                        <a href="{% url 'index' %}" class="a-header-menu">Home</a>
+                    {% endif %}
                     <a href="{% url 'logout' %}" class="a-header-menu">Logout</a>
                 {% endif %}
             </div>

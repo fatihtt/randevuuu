@@ -15,7 +15,7 @@
         <div class="div-reservations-main">
             <h3>Reservations:</h3>
             {% for reservation in my_reservations %}
-                <div class="div-reservation">
+                <div data-id="{{ reservation.id }}" class="div-reservation pointer">
                     Service: {{ reservation.service.service.name }} on {{ reservation.start_time }} at {{ reservation.service.provider.name }}
                 </div>
             {% empty %}
@@ -27,11 +27,11 @@
         <div class="div-subscription-main">
             <h3>Subscriptions:</h3>
             {% for subscription in my_subscriptions %}
-                <div class="div-subscription">
+                <div data-id="{{ subscription.provider.id }}" class="div-subscription provider pointer">
                     {% if subscription.provider.provider_settings.logo_url %}
-                        <img src="/static/{{ subscription.provider.provider_settings.logo_url }}" alt="{{ subscription.provider.name }}" class="img-subscription-logo">
+                        <img src="/static/{{ subscription.provider.provider_settings.logo_url }}" alt="{{ subscription.provider.name }}" class="img-logo">
                     {% else %}
-                        <div class="div-subscription-no-image">
+                        <div class="div-provider-no-image">
                             <span>{{ subscription.provider.name }}</span>
                         </div>
                     {% endif %}
@@ -48,7 +48,7 @@
                 <input type="text" id="div-search-text" name="div-search-text" placeholder="Search Provider Name, City, District, etc.">
                 <span class="material-icons search-icon">search</span>
             </div>
-            <div class="div-explore-result-main">
+            <div class="div-explore-result-main hidden">
 
             </div>
         </div>

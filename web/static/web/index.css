@@ -30,7 +30,7 @@
 }
 .div-explore-result-main::-webkit-scrollbar {
     display: none;
-  }
+}
 .div-explore-search {
     position: relative;
     display: flex;
@@ -44,15 +44,6 @@
 }
 h3 {
     margin-top: 50px;
-}
-.div-subscription-no-image, .div-result-element-no-image {
-    width: 300px;
-    height: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 10px;
-    border: 2px solid black;
 }
 .div-result-element {
     display: flex;
@@ -79,4 +70,7 @@ h3 {
     border-radius: 5px;
     border-color: antiquewhite;
     font-size: smaller;
+}
+.a-search-result {
+    width: 100%;
 }

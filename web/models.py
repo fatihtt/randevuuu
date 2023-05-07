@@ -51,7 +51,7 @@ class Location(models.Model):
         return f"{self.id}: {self.longitude}, {self.latitude}: {self.provider.name}"
 
 class AvailableService(models.Model):
-    provider = models.ForeignKey(ServiceProvider, on_delete=models.CASCADE)
+    provider = models.ForeignKey(ServiceProvider, on_delete=models.CASCADE, related_name="available_services")
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     available = models.BooleanField(default=False)
     time_range = models.DurationField()
@@ -89,7 +89,7 @@ class ProviderSettings(models.Model):
         return f"{self.id}: Settings of {self.provider.name}"
 
 class Subscriptions(models.Model):
-    provider = models.ForeignKey(ServiceProvider, on_delete=models.CASCADE)
+    provider = models.ForeignKey(ServiceProvider, on_delete=models.CASCADE, related_name="subscriptions")
     customer = models.ForeignKey(User, on_delete=models.CASCADE)
     approve_time = models.DateTimeField(blank=True, null=True)
     deactivate_time = models.DateTimeField(blank=True, null=True)
@@ -100,7 +100,7 @@ class Subscriptions(models.Model):
 
 class Reservation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    service = models.ForeignKey(AvailableService, on_delete=models.CASCADE)
+    service = models.ForeignKey(AvailableService, on_delete=models.CASCADE, related_name="reservations")
     start_time = models.DateTimeField()
     reservation_time = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
@@ -116,14 +116,14 @@ class Reservation(models.Model):
         return f"{self.id}: {self.user.email}, {self.service.service.name}, {self.reservation_time}"
 
 class Payment(models.Model):
-    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name="payments")
     time = models.DateTimeField(auto_now_add=True)
     amount = models.FloatField()
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
-    information = models.TextField()
+    information = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.id}: {self.user.email}, {self.reservation.service.service.name}, on {self.time}, {self.amount} {self.currency.code}"
+        return f"{self.id}: {self.reservation.user.email}, {self.reservation.service.service.name}, on {self.time}, {self.amount} {self.currency.code}"
 
 class Message(models.Model):
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="receiver")
