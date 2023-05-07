@@ -1,0 +1,32 @@
+{% extends "web/layout.html" %}
+{% load static %}
+
+{% block title %}
+    randevuuu - Login
+{% endblock %}
+
+{% block head %}
+    <link href="{% static 'web/login.css' %}" rel="stylesheet">
+    <script src="{% static 'web/login.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="div-login-main">
+        <div class="div-login-header">
+            randevuuu - Login
+        </div>
+        <div class="div-login-form">
+            {% if message %}
+            <div class="div-server-message">
+                {{ message }}
+            </div>
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="text" id="input-login-email" name="input-login-email" placeholder="Email">
+                <input type="password" id="input-login-pass" name="input-login-pass" placeholder="Password">
+                <button id="input-login-button">Login</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

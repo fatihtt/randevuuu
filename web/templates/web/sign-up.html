@@ -1,0 +1,33 @@
+{% extends "web/layout.html" %}
+{% load static %}
+
+{% block title %}
+    randevuuu - Login
+{% endblock %}
+
+{% block head %}
+    <link href="{% static 'web/sign-up.css' %}" rel="stylesheet">
+    <script src="{% static 'web/sign-up.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="div-sign-up-main">
+        <div class="div-sign-up-header">
+            randevuuu - Sign Up
+        </div>
+        <div class="div-sign-up-form">
+            {% if message %}
+            <div class="div-server-message">
+                {{ message }}
+            </div>
+            {% endif %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="text" id="input-sign-up-email" name="input-sign-up-email" {% if email %}value="{{ email }}"{% endif %} placeholder="E-mail">
+                <input type="password" id="input-sign-up-pass" name="input-sign-up-pass" placeholder="Password">
+                <input type="password" id="input-sign-up-pass-confirm" name="input-sign-up-pass-confirm" placeholder="Password Confirm">
+                <button id="input-sign-up-button">Sign Up</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

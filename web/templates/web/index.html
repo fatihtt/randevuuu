@@ -1,0 +1,56 @@
+{% extends "web/layout.html" %}
+{% load static %}
+
+{% block title %}
+    randevuuu
+{% endblock %}
+
+{% block head %}
+    <link href="{% static 'web/index.css' %}" rel="stylesheet">
+    <script src="{% static 'web/index.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+    {% if user.is_authenticated %}
+        <div class="div-reservations-main">
+            <h3>Reservations:</h3>
+            {% for reservation in my_reservations %}
+                <div class="div-reservation">
+                    Service: {{ reservation.service.service.name }} on {{ reservation.start_time }} at {{ reservation.service.provider.name }}
+                </div>
+            {% empty %}
+                <p>
+                    No reservation.
+                </p>
+            {% endfor %}
+        </div>
+        <div class="div-subscription-main">
+            <h3>Subscriptions:</h3>
+            {% for subscription in my_subscriptions %}
+                <div class="div-subscription">
+                    {% if subscription.provider.provider_settings.logo_url %}
+                        <img src="/static/{{ subscription.provider.provider_settings.logo_url }}" alt="{{ subscription.provider.name }}" class="img-subscription-logo">
+                    {% else %}
+                        <div class="div-subscription-no-image">
+                            <span>{{ subscription.provider.name }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p>
+                    No subscription yet!
+                </p>
+            {% endfor %}
+        </div>
+        <div class="div-explore-main">
+            <h3>Explore:</h3>
+            <div class="div-explore-search">
+                <input type="text" id="div-search-text" name="div-search-text" placeholder="Search Provider Name, City, District, etc.">
+                <span class="material-icons search-icon">search</span>
+            </div>
+            <div class="div-explore-result-main">
+
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+.hidden {
+    display: none;
+}
+.pointer {
+    cursor: pointer;
+}
+.cursor-default {
+    cursor: default;
+}
