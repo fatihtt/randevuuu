@@ -129,6 +129,7 @@ def view_search(request):
                 "available_services": available_services_cooked
             }
             providers_cooked.append(provider_cooked)
+
         return JsonResponse({"data": providers_cooked}, status=201)
     except Exception as e:
         print("error: ", e)
@@ -230,7 +231,7 @@ def view_provider(request, provider_id):
         else:
             star_avg = -1
 
-        active_reservations = Reservation.objects.filter(user=request.user, service__provider=provider, active=True).exclude(realization=True)
+        active_reservations = Reservation.objects.filter(user=request.user, service__provider=provider, active=True, start_time__gt=datetime.now()).exclude(realization=True)
 
         # Adjust active reservation
         if active_reservations.count() > 1:
@@ -241,6 +242,14 @@ def view_provider(request, provider_id):
         if active_reservations.count() == 1:
             active_reservation = active_reservations[0]
             
+        # Adjust subscription information
+        y_subscriptions = request.user.subscriptions.filter(provider=provider)
+        you_subscribed = y_subscriptions.count() == 1
+        subscription_approved = False
+        if you_subscribed:
+            subscription_approved = y_subscriptions[0].approve_time != None
+
+
 
         provider_cooked = {
                 "id": provider.id,
@@ -249,6 +258,7 @@ def view_provider(request, provider_id):
                 "location": location_text,
                 "longitude": locat.longitude,
                 "latitude": locat.latitude,
+                "phone": provider.phone,
                 "total_reservations": reserv_count,
                 "realized_reservations": realized_reservations,
                 "subscribers": provider.subscriptions.count(),
@@ -256,7 +266,9 @@ def view_provider(request, provider_id):
                 "your_reserv_count": your_reserv_count,
                 "your_reserv_realized_count": your_reserv_realized_count,
                 "your_unrated_reservations": your_unrated_reservations,
-                "active_reservation": active_reservation
+                "active_reservation": active_reservation,
+                "you_subscribed": you_subscribed,
+                "subscription_approved": subscription_approved
             }
         return render(request, "web/provider.html", {
             "provider": provider_cooked
@@ -266,3 +278,44 @@ def view_provider(request, provider_id):
         return render(request, "web/provider.html", {
             "message": e
         })
+    
+def view_subscribe(request):
+    try:
+        if not request.user.is_authenticated:
+            raise Exception("Authorization needed!")
+        
+        # Check method
+        if request.method != "POST":
+            raise Exception("Wrong method!")
+        
+        # Check providerId
+        provider_id = json.loads(request.body.decode('utf-8'))["provider_id"]
+
+        print("tip:", type(provider_id))
+        if not provider_id or not type(provider_id) == type(1):
+            raise Exception("Wrong provider!")
+        
+        # Take provider
+        m_provider = None
+        try:
+            m_provider = ServiceProvider.objects.get(id=provider_id)
+        except:
+            raise Exception("Wrong provider !!")
+        
+        # Check prior subscription
+        if m_provider.subscriptions.filter(customer=request.user).count() > 0:
+            raise Exception("Already subscribed!")
+
+        m_approve_time = None
+        if not m_provider.provider_settings.approved_subscription:
+            m_approve_time = datetime.now()
+        
+        print("approvement: ", m_approve_time)
+
+        new_subs = Subscriptions(provider=m_provider, customer=request.user, approve_time=m_approve_time)
+        new_subs.save()
+
+        # raise Exception("ne demek")
+        return JsonResponse({"data":"Hello from json response"}, status=201)
+    except Exception as e:
+        return JsonResponse({"message": str(e) }, status=401)

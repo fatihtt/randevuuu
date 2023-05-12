@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    my_token = getCookie('csrftoken')
+    my_token = getCookie('csrftoken');
 });
 function search_change (e) {
     m_text = e.target.value;
@@ -53,7 +53,9 @@ function search_change (e) {
                 }
                 else {
                     m_inner = `
-                        <img src="/static/${result[i].logo_url}" alt="${result[i].name}" class="img-logo">
+                        <div class="div-result-logo">
+                            <img src="/static/${result[i].logo_url}" alt="${result[i].name}" class="img-logo">
+                        </div>
                     `;
                 }
                 // Service List
