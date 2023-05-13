@@ -64,7 +64,7 @@
                 <div class="col"></div>
                 <div class="col actions">
                     {% if not res.payment_done and res.remaining_days > 0 and res.active %}
-                        <button class="button-out-1 button-color-red">
+                        <button data-id="{{ res.id }}" class="button-out-1 button-color-red button-cancel-reservation">
                             Cancel Reservation
                         </button>
                     {% endif %}

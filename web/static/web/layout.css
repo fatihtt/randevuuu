@@ -143,3 +143,6 @@ a:active {
 .col.actions {
     margin-top:15px;
 }
+.vis-hidden {
+    visibility: hidden;
+}

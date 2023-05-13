@@ -108,7 +108,9 @@
                         {% if not provider.active_reservation == None %}
                             <div class="col">Your active reservation:</div>
                             <div class="col">
-                                {{ provider.active_reservation.service.service.name }}, {{ provider.active_reservation.start_time }}
+                                <a href="/reservation/{{ provider.active_reservation.id }}" class="no-a">
+                                    {{ provider.active_reservation.service.service.name }}, {{ provider.active_reservation.start_time }}
+                                </a>
                             </div>
                             </div>
                             <div class="row">
@@ -117,14 +119,14 @@
                         <div class="col actions">
                             {% if provider.subscription_approved %}
                                 {% if provider.active_reservation == None %}
-                                    <button class="button-out-1 button-color-green">
+                                    <button data-id="{{ provider.id }}" class="button-out-1 button-color-green button-new-reservation">
                                         New Reservation
                                     </button>
                                 {% endif %}
                             {% else %}
                                 Waiting provider's approvement.
                             {% endif %}
-                            <button class="button-out-1 button-color-red">
+                            <button data-id="{{ provider.id }}" class="button-out-1 button-color-red button-unsubs">
                                 Unsubscribe
                             </button>
                         </div>

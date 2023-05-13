@@ -1,0 +1,63 @@
+{% extends "web/layout.html" %}
+{% load static %}
+
+{% block title %}
+    randevuuu - reservation
+{% endblock %}
+
+{% block head %}
+    <link href="{% static 'web/new-reservation.css' %}" rel="stylesheet">
+    <script src="{% static 'web/new-reservation.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="div-new-reservation-main">
+        <h2>New Reservation</h2>
+        <div class="div-new-reservation-form">
+            <form class="form-new-reservation" method="post">
+
+                <div class="row">
+                    <div class="col">
+                        Provider:
+                    </div>
+                    <div class="col">
+                        {{ provider.name }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        Active Services:
+                    </div>
+                    <div class="col">
+                        <select name="select-active-services" id="select-active-services">
+                            <option value="-1">Select service...</option>
+                            {% for active_service in active_services %}
+                            <option value="{{active_service.id}}">{{ active_service.name }}</option>
+                            {% empty %}
+                            <option value="-1">No active services</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        Date:
+                    </div>
+                    <div class="col">
+                        <div class="date-selection-main">
+                            <div class="date-selection-previous pointer vis-hidden">
+                                <span class="material-icons">chevron_left</span>
+                            </div>
+                            <div class="date-selection-date">
+                                May 13, 23 Saturday
+                            </div>
+                            <div class="date-selection-next pointer">
+                                <span class="material-icons">chevron_right</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

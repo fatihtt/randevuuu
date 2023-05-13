@@ -9,6 +9,8 @@ urlpatterns = [
     path("explore-search", views.view_search, name="explore-search"),
     path("reservation/<int:reservation_id>", views.view_reservation, name="reservation"),
     path("provider/<int:provider_id>", views.view_provider, name="provider"),
-    path("subscribe", views.view_subscribe, name="subscribe")
-
+    path("subscribe", views.view_subscribe, name="subscribe"),
+    path("unsubscribe", views.unsubscribe, name="unsubscribe"),
+    path("cancel-reservation", views.cancel_reservation, name="cancel-reservation"),
+    path("new-reservation/<int:provider_id>", views.view_new_reservation, name="new-reservation")
 ]

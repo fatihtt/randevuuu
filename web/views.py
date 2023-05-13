@@ -18,9 +18,9 @@ def index(request):
     my_subscriptions = None
 
     if request.user.is_authenticated:
-        my_reservations = Reservation.objects.filter(user=request.user)
+        my_reservations = Reservation.objects.filter(user=request.user, active=True, start_time__gt=datetime.now())
 
-        my_subscriptions = Subscriptions.objects.filter(customer=request.user)
+        my_subscriptions = Subscriptions.objects.filter(customer=request.user, deactivate_time=None)
     else:
         return HttpResponseRedirect("login")
     
@@ -101,10 +101,11 @@ def view_search(request):
             raise Exception("Wrong method")
         
         # Take search text
-        search_text = json.loads(request.body.decode('utf-8'))["text"]
+        search_term = json.loads(request.body.decode('utf-8'))["text"]
 
+        search_term = search_term.upper()
         # Search in Provider name, city, district
-        providers = ServiceProvider.objects.filter(Q(name__contains=search_text) | Q(location__city__contains=search_text) | Q(location__district__contains=search_text))
+        providers = ServiceProvider.objects.filter(Q(name__icontains=search_term) | Q(location__city__icontains=search_term) | Q(location__district__icontains=search_term))
         print("search result: ", providers)
         providers_cooked = []
         # Cook providers
@@ -163,6 +164,7 @@ def view_reservation(request, reservation_id):
         if payments.count() > 0:
             payment_done = True
         reservation_cooked = {
+            "id": reservation.id,
             "service_name": reservation.service.service.name,
             "provider_id": reservation.service.provider.id,
             "provider_name": reservation.service.provider.name,
@@ -243,7 +245,7 @@ def view_provider(request, provider_id):
             active_reservation = active_reservations[0]
             
         # Adjust subscription information
-        y_subscriptions = request.user.subscriptions.filter(provider=provider)
+        y_subscriptions = request.user.subscriptions.filter(provider=provider, deactivate_time=None)
         you_subscribed = y_subscriptions.count() == 1
         subscription_approved = False
         if you_subscribed:
@@ -278,6 +280,17 @@ def view_provider(request, provider_id):
         return render(request, "web/provider.html", {
             "message": e
         })
+
+def view_new_reservation(request, provider_id):
+
+    provider = {"name": "Service Provider"}
+
+    active_services = [{"id": 1, "name": "Headcut"}, {"id": 2, "name": "Beardcut"}]
+
+    return render(request, "web/new-reservation.html", {
+        "provider": provider,
+        "active_services": active_services
+    })
     
 def view_subscribe(request):
     try:
@@ -303,19 +316,132 @@ def view_subscribe(request):
             raise Exception("Wrong provider !!")
         
         # Check prior subscription
+        has_prior_subscription = False
+        prior_subscription = None
         if m_provider.subscriptions.filter(customer=request.user).count() > 0:
-            raise Exception("Already subscribed!")
+            deactive_subscriptions = m_provider.subscriptions.filter(customer=request.user).exclude(deactivate_time=None)
+            if deactive_subscriptions.count() == 1:
+                # Activate deactive subscription
+                has_prior_subscription = True
+                prior_subscription = deactive_subscriptions[0]
+            else:
+                raise Exception("Already subscribed!")
 
         m_approve_time = None
         if not m_provider.provider_settings.approved_subscription:
             m_approve_time = datetime.now()
         
-        print("approvement: ", m_approve_time)
 
-        new_subs = Subscriptions(provider=m_provider, customer=request.user, approve_time=m_approve_time)
-        new_subs.save()
+        # Create new subscription or update old deactivated subscription
+        if not has_prior_subscription:
+            new_subs = Subscriptions(provider=m_provider, customer=request.user, approve_time=m_approve_time)
+            new_subs.save()
+        else:
+            prior_subscription.deactivate_time = None
+            prior_subscription.customer_deactivated = None
+            if not m_provider.provider_settings.approved_subscription:
+                prior_subscription.approve_time = datetime.now()
+            else:
+                prior_subscription.approve_time = None
+            prior_subscription.save()
 
         # raise Exception("ne demek")
         return JsonResponse({"data":"Hello from json response"}, status=201)
     except Exception as e:
         return JsonResponse({"message": str(e) }, status=401)
+    
+def unsubscribe(request):
+    try:
+        # Check authentication
+        if not request.user.is_authenticated:
+            raise Exception("Unauthorized request.")
+        
+        # Check request method
+        if request.method != "POST":
+            raise Exception("Wrong method.")
+        
+        # Take provider_id
+        provider_id = json.loads(request.body.decode('utf-8'))["provider_id"]
+
+        if not provider_id:
+            raise Exception("No provider info.")
+        
+        provider_id = int(provider_id)
+
+        # Check-Take ServiceProvider
+        m_provider = None
+
+        try:
+            m_provider = ServiceProvider.objects.get(id=provider_id)
+        except:
+            raise Exception("No provider.")
+        
+        # Check-Take Subscription
+        m_subscription = None
+        try:
+            m_subscription = Subscriptions.objects.get(provider=m_provider, customer=request.user, deactivate_time=None)
+        except:
+            raise Exception("No proper subscription")
+        
+        # Check-Take Active Reservations
+        try:
+            active_reservations = Reservation.objects.filter(user=request.user, service__provider=m_provider, active=True, start_time__gt=datetime.now())
+        except:
+            raise Exception("Fault while taking active reservations")
+        
+        # Make changes for unsubscription
+        m_subscription.deactivate_time = datetime.now()
+        m_subscription.customer_deactivated = True
+        m_subscription.save()
+
+        # Deactivate active reservations
+        for active_reservation in active_reservations:
+            active_reservation.active = False
+            active_reservation.deactivation_time = datetime.now()
+            active_reservation.deactivation_reason = "Unsubscription"
+            active_reservation.save()
+
+        return JsonResponse({"result": 0, "message": "subscription deactivated"}, status=201)
+
+    except Exception as e:
+        print("unsbuscription error: ", str(e))
+        return JsonResponse({"result": 1, "message": str(e)}, status=401)
+    
+def cancel_reservation(request):
+    try:
+        # Check authentication
+        if not request.user.is_authenticated:
+            raise Exception("Unauthorized request.")
+        
+        # Check request method
+        if request.method != "POST":
+            raise Exception("Wrong method.")
+        
+        # Take reservation_id
+        reservation_id = json.loads(request.body.decode('utf-8'))["reservation_id"]
+        
+        # Check - Take reservation
+        if not reservation_id:
+            raise Exception("No reservation number.")
+        
+        m_reservation = None
+        try:
+            m_reservation = Reservation.objects.get(id=reservation_id, user=request.user)
+        except:
+            raise Exception("No reservation.")
+        
+        # Check reservation last 24h
+        remaining = m_reservation.start_time.replace(tzinfo=None) - datetime.now()
+
+        if remaining.days > 0:
+            m_reservation.active = False
+            m_reservation.deactivation_time = datetime.now()
+            m_reservation.save()
+            
+            return JsonResponse({"succeed": 0, "message": "reservation canceled"}, status=201)
+        else:
+            raise Exception("No time for cancelation.")
+        
+
+    except Exception as e:
+        return JsonResponse({"succeed": 1, "error": str(e)}, status=401)
