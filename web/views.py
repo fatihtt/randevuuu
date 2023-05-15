@@ -9,8 +9,9 @@ from django.core import serializers
 from django.db.models import Q
 import json
 from datetime import datetime
+from dateutil import parser
 
-from .models import User, Reservation, Subscriptions, ServiceProvider, AvailableService, Payment
+from .models import User, Reservation, Subscriptions, ServiceProvider, AvailableService, Payment, TempDeactivation
 
 # Create your views here.
 def index(request):
@@ -283,14 +284,43 @@ def view_provider(request, provider_id):
 
 def view_new_reservation(request, provider_id):
 
-    provider = {"name": "Service Provider"}
+    try:
+        # provider = {"id": 1,"name": "Service Provider"}
+        provider = None
+        if not provider_id:
+            raise Exception("No provider detected")
+        
+        try:
+            provider = ServiceProvider.objects.get(id=provider_id)
+        except:
+            raise Exception("No provider")
+        
+        provider_cooked = {
+            "id": provider.id,
+            "name": provider.name
+        }
+        print("provider: ", provider_cooked)
+        
+        active_services = AvailableService.objects.filter(provider=provider)
 
-    active_services = [{"id": 1, "name": "Headcut"}, {"id": 2, "name": "Beardcut"}]
+        active_services_cooked = []
+        for active_service in active_services:
+            service = {
+                "id": active_service.id,
+                "name": active_service.service.name,
+                "duration_min": active_service.time_range.seconds // 60,
+            }
+            active_services_cooked.append(service)
 
-    return render(request, "web/new-reservation.html", {
-        "provider": provider,
-        "active_services": active_services
-    })
+        return render(request, "web/new-reservation.html", {
+            "provider": provider_cooked,
+            "active_services": active_services_cooked
+        })
+    except Exception as e:
+        print("Error. ", str(e))
+        return render(request, "web/new-reservation.html", {
+            "message": str(e)
+        })
     
 def view_subscribe(request):
     try:
@@ -433,6 +463,7 @@ def cancel_reservation(request):
         # Check reservation last 24h
         remaining = m_reservation.start_time.replace(tzinfo=None) - datetime.now()
 
+        # Cancel reservation
         if remaining.days > 0:
             m_reservation.active = False
             m_reservation.deactivation_time = datetime.now()
@@ -440,8 +471,78 @@ def cancel_reservation(request):
             
             return JsonResponse({"succeed": 0, "message": "reservation canceled"}, status=201)
         else:
-            raise Exception("No time for cancelation.")
+            raise Exception("No enough time for cancelation.")
         
 
     except Exception as e:
         return JsonResponse({"succeed": 1, "error": str(e)}, status=401)
+    
+def get_available_times(request):
+    try:
+        # check authorization
+        if not request.user.is_authenticated:
+            raise Exception("No authorization.")
+        
+        # take - check provider
+        m_provider = None
+        m_provider_id = json.loads(request.body.decode('utf-8'))["provider_id"]
+        try:
+            m_provider = ServiceProvider.objects.get(id=m_provider_id)
+        except:
+            raise Exception("No provider")
+        
+        # take - check date
+        m_date = json.loads(request.body.decode('utf-8'))["date"]
+        try:
+            m_date = parser.parse(m_date)
+        except:
+            raise Exception("No valid date came.")
+        
+        # take - check choosen service
+        m_available_service = None
+        m_available_service_id = json.loads(request.body.decode('utf-8'))["a_service_id"]
+        try:
+            m_available_service = AvailableService.objects.get(id=m_available_service_id, provider=m_provider)
+        except:
+            raise Exception("Wrong service identification.")
+        
+        # ctrl user is subscriber
+        if m_provider.subscriptions.filter(customer=request.user, deactivate_time=None).exclude(approve_time=None).count() != 1:
+            raise Exception("No proper subscription")
+        
+        # take reservations specified date
+        active_reservations = Reservation.objects.filter(service__provider=m_provider, start_time__date=m_date)
+
+        # take scheme for specified date
+        scheme_hours = json.loads(m_available_service.weekly_scheme)[m_date.weekday()]
+
+        print("scheme hours at start: ", scheme_hours)
+
+        # eliminate hours over temp_deactivations
+        if m_provider.temp_deactivations.filter(deactive_date=m_date, hours=None).count() > 0:
+            scheme_hours = []
+        else:
+            temp_deactivations_of_day = m_provider.temp_deactivations.filter(deactive_date=m_date).exclude(hours=None)
+            if temp_deactivations_of_day.count() == 1:
+                for hour in json.loads(temp_deactivations_of_day.first().hours):
+                    if hour in scheme_hours: scheme_hours.remove(hour)
+
+        print("scheme hours after temp deactivations: ", scheme_hours)
+
+        # eliminate hours of current reservations
+        for m_hour in scheme_hours:
+            capacity_point = m_provider.service_capacity * 60
+            hour_active_reservations = active_reservations.filter(start_time__hour=m_hour)
+            for hour_active_reservation in hour_active_reservations:
+                capacity_point = capacity_point - (hour_active_reservation.service.time_range.seconds // 60)
+
+            if not capacity_point > (m_available_service.time_range.seconds//60):
+                scheme_hours.remove(m_hour)
+
+        print("scheme hours after active reservations: ", scheme_hours)
+
+        # send proper times
+        return JsonResponse({"succeed": 0, "available_hours": scheme_hours}, status=201)
+    except Exception as e:
+        return JsonResponse({"succeed": 1, "message": str(e)}, status=401)
+

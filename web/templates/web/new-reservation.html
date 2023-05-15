@@ -20,7 +20,7 @@
                     <div class="col">
                         Provider:
                     </div>
-                    <div class="col">
+                    <div data-id="{{ provider.id }}" class="col provider-col">
                         {{ provider.name }}
                     </div>
                 </div>
@@ -32,7 +32,7 @@
                         <select name="select-active-services" id="select-active-services">
                             <option value="-1">Select service...</option>
                             {% for active_service in active_services %}
-                            <option value="{{active_service.id}}">{{ active_service.name }}</option>
+                            <option data-duration="{{ active_service.duration_min }}" value="{{active_service.id}}">{{ active_service.name }}</option>
                             {% empty %}
                             <option value="-1">No active services</option>
                             {% endfor %}
@@ -57,7 +57,26 @@
                         </div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col">Available Times:</div>
+                    <div class="col time-selection-main">
+                        Please select service and adjust date
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col actions">
+                        <button data-id="{{ res.id }}" disabled class="button-out-1 button-color-green">
+                            Save Reservation
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
+    {% if message %}
+        <script>
+            gMessage("alert", "{{ message }}", "/");
+        </script>
+    {% endif %}
 {% endblock %}

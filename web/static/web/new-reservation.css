@@ -3,3 +3,31 @@
     gap:20px;
     align-items: center;
 }
+.date-selection-date {
+    min-width: 150px;
+    text-align: center;
+}
+.div-time-select-main {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+}
+.div-time-select-out {
+    width: 60px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.div-time-select-out.selected {
+    /* background-color: var(--m-green); */
+    border: 1px solid var(--m-green);
+}
+.div-time-select-in {
+    background-color: var(--m-beige);
+    border-radius: 5px;
+    padding: 3px;
+}
+button:disabled {
+    background-color: gray;
+}

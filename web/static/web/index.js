@@ -1,4 +1,3 @@
-let my_token;
 document.addEventListener("DOMContentLoaded", function () {
     // eventListener for explore
     document.querySelector("#div-search-text").addEventListener("keyup", search_change);
@@ -21,8 +20,6 @@ document.addEventListener("DOMContentLoaded", function () {
             window.location.href = `/provider/${providerId}`;
         });
     }
-
-    my_token = getCookie('csrftoken');
 });
 function search_change (e) {
     m_text = e.target.value;
@@ -97,19 +94,4 @@ function search_change (e) {
         resultDiv.innerHTML = "";
         if (!resultDiv.classList.contains("hidden")) resultDiv.classList.add("hidden");
     }
-}
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
 }

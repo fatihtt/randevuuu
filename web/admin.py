@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, ServiceCategory, Service, Location, Currency, ServiceProvider, AvailableService, Discount, ProviderSettings, Subscriptions, Reservation, Payment, Message, Notification
+from .models import User, ServiceCategory, Service, Location, Currency, ServiceProvider, AvailableService, Discount, ProviderSettings, Subscriptions, Reservation, Payment, Message, Notification, TempDeactivation
 
 # Register your models here.
 admin.site.register(User, UserAdmin)
@@ -17,3 +17,4 @@ admin.site.register(Reservation)
 admin.site.register(Payment)
 admin.site.register(Message)
 admin.site.register(Notification)
+admin.site.register(TempDeactivation)

@@ -12,5 +12,6 @@ urlpatterns = [
     path("subscribe", views.view_subscribe, name="subscribe"),
     path("unsubscribe", views.unsubscribe, name="unsubscribe"),
     path("cancel-reservation", views.cancel_reservation, name="cancel-reservation"),
-    path("new-reservation/<int:provider_id>", views.view_new_reservation, name="new-reservation")
+    path("new-reservation/<int:provider_id>", views.view_new_reservation, name="new-reservation"),
+    path("get-available-times", views.get_available_times, name="get-available-times")
 ]

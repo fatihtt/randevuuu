@@ -33,6 +33,7 @@ class ServiceProvider(models.Model):
     name = models.CharField(max_length=100)
     category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE)
     phone = models.CharField(max_length=30, null=True, blank=True)
+    service_capacity = models.IntegerField(default=1)
 
     def __str__(self):
         return f"{self.id}: {self.name}, {self.category.name}"
@@ -146,4 +147,13 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.id}: {self.receiver.email}, on {self.time}, {self.title}"
+    
+class TempDeactivation(models.Model):
+    provider = models.ForeignKey(ServiceProvider, on_delete=models.CASCADE, related_name="temp_deactivations")
+    deactive_date = models.DateField()
+    hours = models.CharField(max_length=100, blank=True, null=True)
+    excuse = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.id}: {self.provider.name}, on {self.deactive_date}"
 
